@@ -1,0 +1,197 @@
+{
+  "result": true,
+  "message": "OK",
+  "code": 200,
+  "tags": [
+    {
+      "tag": "mtvstars",
+      "tweets": 513408,
+      "retweets": 165192,
+      "potential_views": 154525717,
+      "links": 0.0599,
+      "photos": 0.01774,
+      "mentions": 0.01347,
+      "color": 1
+    },
+    {
+      "tag": "pushawardskathniels",
+      "tweets": 48321,
+      "retweets": 491,
+      "potential_views": 2438242,
+      "links": 0.45322,
+      "photos": 0.00509,
+      "mentions": 0.00163,
+      "color": 1
+    },
+    {
+      "tag": "videomtv2015",
+      "tweets": 41146,
+      "retweets": 18758,
+      "potential_views": 17484204,
+      "links": 0.15292,
+      "photos": 0.03393,
+      "mentions": 0.02654,
+      "color": 1
+    },
+    {
+      "tag": "gameinsight",
+      "tweets": 26200,
+      "retweets": 38,
+      "potential_views": 741696,
+      "links": 0.99649,
+      "photos": 0.00588,
+      "mentions": 0,
+      "color": 1
+    },
+    {
+      "tag": "mtvstarof2015",
+      "tweets": 25454,
+      "retweets": 858,
+      "potential_views": 1411200,
+      "links": 0.00833,
+      "photos": 0.00228,
+      "mentions": 0.00244,
+      "color": 1
+    },
+    {
+      "tag": "android",
+      "tweets": 21983,
+      "retweets": 367,
+      "potential_views": 7162500,
+      "links": 0.99395,
+      "photos": 0.0237,
+      "mentions": 0.01215,
+      "color": 1
+    },
+    {
+      "tag": "androidgames",
+      "tweets": 19050,
+      "retweets": 67,
+      "potential_views": 414783,
+      "links": 0.99717,
+      "photos": 0.00677,
+      "mentions": 0,
+      "color": 1
+    },
+    {
+      "tag": "jobs",
+      "tweets": 18162,
+      "retweets": 842,
+      "potential_views": 20795296,
+      "links": 0.99637,
+      "photos": 0.11722,
+      "mentions": 0.00688,
+      "color": 1
+    },
+    {
+      "tag": "job",
+      "tweets": 16079,
+      "retweets": 438,
+      "potential_views": 12645262,
+      "links": 0.99378,
+      "photos": 0.07824,
+      "mentions": 0.00753,
+      "color": 1
+    },
+    {
+      "tag": "nowplaying",
+      "tweets": 14796,
+      "retweets": 1079,
+      "potential_views": 48783733,
+      "links": 0.76764,
+      "photos": 0.07097,
+      "mentions": 0.10929,
+      "color": 1
+    },
+    {
+      "tag": "news",
+      "tweets": 13450,
+      "retweets": 1925,
+      "potential_views": 39973496,
+      "links": 0.92379,
+      "photos": 0.12981,
+      "mentions": 0.04275,
+      "color": 1
+    },
+    {
+      "tag": "prayforparis",
+      "tweets": 12925,
+      "retweets": 29421,
+      "potential_views": 29802200,
+      "links": 0.07288,
+      "photos": 0.08379,
+      "mentions": 0.06414,
+      "color": 1
+    },
+    {
+      "tag": "aldub21stweeksary",
+      "tweets": 12550,
+      "retweets": 62917,
+      "potential_views": 22957446,
+      "links": 0.26996,
+      "photos": 0.08534,
+      "mentions": 0.37355,
+      "color": 1
+    },
+    {
+      "tag": "trecru",
+      "tweets": 12188,
+      "retweets": 8,
+      "potential_views": 304629,
+      "links": 1.01017,
+      "photos": 0.99926,
+      "mentions": 0,
+      "color": 1
+    },
+    {
+      "tag": "tuitutil",
+      "tweets": 9317,
+      "retweets": 116,
+      "potential_views": 13089629,
+      "links": 0.99903,
+      "photos": 0.00043,
+      "mentions": 0.16228,
+      "color": 1
+    },
+    {
+      "tag": "eurekamag",
+      "tweets": 9238,
+      "retweets": 2829,
+      "potential_views": 326917,
+      "links": 1,
+      "photos": 0,
+      "mentions": 0,
+      "color": 1
+    },
+    {
+      "tag": "hiring",
+      "tweets": 8858,
+      "retweets": 250,
+      "potential_views": 6245338,
+      "links": 0.99582,
+      "photos": 0.06582,
+      "mentions": 0.00373,
+      "color": 1
+    },
+    {
+      "tag": "periscope",
+      "tweets": 8675,
+      "retweets": 1654,
+      "potential_views": 47008158,
+      "links": 0.98317,
+      "photos": 0.05476,
+      "mentions": 0.10421,
+      "color": 1
+    },
+    {
+      "tag": "rt",
+      "tweets": 7833,
+      "retweets": 10425,
+      "potential_views": 80385917,
+      "links": 0.71339,
+      "photos": 0.18882,
+      "mentions": 0.23988,
+      "color": 1
+    }
+  ]
+}
