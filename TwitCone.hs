@@ -7,7 +7,7 @@ import Data.Text                          as T (Text, pack, append)
 import Types
 
 twitterSearchURL :: Text
-twitterSearchURL = "https://twitter.com/search?q=%23test"
+twitterSearchURL = "https://twitter.com/search?q=%23"
 
 getTrendingJSON :: IO ByteString
 getTrendingJSON = B.readFile "trending.json"
@@ -25,8 +25,7 @@ getConeEntryFromHashtag :: Hashtag -> ConeEntry
 getConeEntryFromHashtag hashtag = ConeEntry {
   ceEntryId       = 0,
   ceLabel         = tag hashtag,
-  -- ceTargetUri     = twitterSearchURL `T.append` tag hashtag,
-  ceTargetUri     = Nothing,
+  ceTargetUri     = Just $ twitterSearchURL `T.append` tag hashtag,
   ceComment       = Nothing,
   ceIconName      = Nothing,
   ceStlName       = Nothing,
@@ -36,6 +35,7 @@ getConeEntryFromHashtag hashtag = ConeEntry {
 }
 
 tagList :: Maybe TrendingHashtags -> [Hashtag]
+tagList Nothing = []
 tagList (Just th) = thTags th
 
 main = do
