@@ -34,11 +34,14 @@ getConeEntryFromHashtag hashtag = ConeEntry {
   ceTextId        = tag hashtag
 }
 
-tagList :: Maybe TrendingHashtags -> [Hashtag]
-tagList Nothing = []
-tagList (Just th) = thTags th
+thTagList :: Maybe TrendingHashtags -> [Hashtag]
+thTagList Nothing = []
+thTagList (Just th) = thTags th
+
+hsTagList :: Maybe HashtagStats -> [Hashtag]
+hsTagList Nothing = []
+hsTagList (Just hs) = hsAssociatedHashtags hs
 
 main = do
-  trendingJSON <- getTrendingJSON
-  -- print $ parseTrendingHashtags trendingJSON
-  print . map getConeEntryFromHashtag $ tagList $ parseTrendingHashtags trendingJSON
+  statsJSON <- getHashtagStatsJSON
+  print . map getConeEntryFromHashtag $ hsTagList $ parseHashtagStats statsJSON
