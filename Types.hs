@@ -2,7 +2,6 @@
 
 module Types where
 
-import Control.Applicative              (optional)
 import Data.Aeson
 import GHC.Generics
 import qualified Data.Text              as T
@@ -31,7 +30,7 @@ instance FromJSON Hashtag where
     retweets <- o .: "retweets"
     potential_views <- o .: "potential_views"
     links <- o .: "links"
-    photos <- optional (o .: "photos")
+    photos <- o .:? "photos"
     mentions <- o .: "mentions"
     color <- o .: "color"
     return Hashtag{..}
