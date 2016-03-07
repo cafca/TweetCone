@@ -2,15 +2,16 @@
 
 module Types where
 
-import Control.Applicative (optional)
+import Control.Applicative              (optional)
 import Data.Aeson
 import GHC.Generics
+import qualified Data.Text              as T
 
 -- Hashtag models a generic Hashtag as may be contained in responses from
 -- various endpoints of the RiteTag API
 
 data Hashtag = Hashtag {
-  tag :: String,
+  tag :: T.Text,
   tweets :: Int,
   retweets :: Int,
   potential_views :: Int,
@@ -40,7 +41,7 @@ instance FromJSON Hashtag where
 
 data TrendingHashtags = TrendingHashtags {
   thResult :: Bool,
-  thMessage :: String,
+  thMessage :: T.Text,
   thCode :: Int,
   thTags :: [Hashtag]
 } deriving (Generic, Show)
@@ -61,8 +62,8 @@ instance FromJSON TrendingHashtags where
 data HashtagStats = HashtagStats {
   hsResult :: Bool,
   hsCode :: Int,
-  hsHashtag :: String,
-  hsMessage :: String,
+  hsHashtag :: T.Text,
+  hsMessage :: T.Text,
   hsAssociatedHashtags :: [Hashtag]
 } deriving (Generic, Show)
 

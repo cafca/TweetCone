@@ -2,36 +2,43 @@
 
 import ConeServer.ConeTypes
 import Data.Aeson
-import Data.ByteString.Lazy.Char8  as B   (readFile, ByteString)
-import Data.Text as T                     (Text, pack)
+import Data.ByteString.Lazy.Char8         as B (readFile, ByteString)
+import Data.Text                          as T (Text, pack, append)
 import Types
+
+twitterSearchURL :: Text
+twitterSearchURL = "https://twitter.com/search?q=%23test"
 
 getTrendingJSON :: IO ByteString
 getTrendingJSON = B.readFile "trending.json"
 
 parseTrendingHashtags :: ByteString -> Maybe TrendingHashtags
-parseTrendingHashtags json = decode json :: Maybe TrendingHashtags
+parseTrendingHashtags = decode
 
 getHashtagStatsJSON :: IO ByteString
 getHashtagStatsJSON = B.readFile "hashtag_stats.json"
 
 parseHashtagStats :: ByteString -> Maybe HashtagStats
-parseHashtagStats json = decode json :: Maybe HashtagStats
+parseHashtagStats = decode
 
 getConeEntryFromHashtag :: Hashtag -> ConeEntry
 getConeEntryFromHashtag hashtag = ConeEntry {
   ceEntryId       = 0,
-  ceLabel         = T.pack $ tag hashtag,
-  ceTargetUri     = Just $ T.pack $ ("https://twitter.com/search?q=%23test" ++ tag hashtag),
+  ceLabel         = tag hashtag,
+  -- ceTargetUri     = twitterSearchURL `T.append` tag hashtag,
+  ceTargetUri     = Nothing,
   ceComment       = Nothing,
   ceIconName      = Nothing,
   ceStlName       = Nothing,
   ceColor         = Nothing,
   ceIsLeaf        = True,
-  ceTextId        = T.pack $ tag hashtag
+  ceTextId        = tag hashtag
 }
 
+tagList :: Maybe TrendingHashtags -> [Hashtag]
+tagList (Just th) = thTags th
+
 main = do
-  putStr "\nTrending Hashtags\n"
   trendingJSON <- getTrendingJSON
-  print $ parseTrendingHashtags trendingJSON
+  -- print $ parseTrendingHashtags trendingJSON
+  print . map getConeEntryFromHashtag $ tagList $ parseTrendingHashtags trendingJSON
