@@ -42,6 +42,23 @@ hsTagList :: Maybe HashtagStats -> [Hashtag]
 hsTagList Nothing = []
 hsTagList (Just hs) = hsAssociatedHashtags hs
 
+extractRelated :: ByteString -> [ConeEntry]
+extractRelated json = let
+  hs = parseHashtagStats json
+  tags = hsTagList hs
+  in map getConeEntryFromHashtag tags
+
+extractTrending :: ByteString -> [ConeEntry]
+extractTrending json = let
+  th = parseTrendingHashtags json
+  tags = thTagList th
+  in map getConeEntryFromHashtag tags
+
 main = do
+  putStr "\nRelated Tags\n"
   statsJSON <- getHashtagStatsJSON
-  print . map getConeEntryFromHashtag $ hsTagList $ parseHashtagStats statsJSON
+  print $ extractRelated statsJSON
+
+  putStr "\nTrending Tags\n"
+  trendingJSON <- getTrendingJSON
+  print $ extractTrending trendingJSON
