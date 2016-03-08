@@ -1,13 +1,14 @@
 {-# LANGUAGE DeriveGeneric, OverloadedStrings #-}
 
 import ConeServer.ConeTypes
+import ConeServer.Types                   (RoseTree(..))
 import Data.Aeson
 import Data.ByteString.Lazy.Char8         as B (readFile, ByteString)
 import Data.Text                          as T (Text, pack, append)
 import Types
 
 twitterSearchURL :: Text
-twitterSearchURL = "https://twitter.com/search?q=%23"
+twitterSearchURL = "https://twitter.com/hashtag/"
 
 getTrendingJSON :: IO ByteString
 getTrendingJSON = B.readFile "trending.json"
@@ -53,6 +54,11 @@ extractTrending json = let
   th = parseTrendingHashtags json
   tags = thTagList th
   in map getConeEntryFromHashtag tags
+
+foldTwitCone :: ConeTree
+foldTwitCone = let
+  insertEntry (RoseLeaf a b xs) cEntry = RoseLeaf a b cEntry:xs
+  in foldr insertEntry emptyTree
 
 main = do
   putStr "\nRelated Tags\n"
