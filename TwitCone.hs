@@ -1,14 +1,27 @@
 {-# LANGUAGE DeriveGeneric, OverloadedStrings #-}
 
+import ConeServer.RunServer
 import ConeServer.ConeTypes
-import ConeServer.Types                   (RoseTree(..))
+import ConeServer.Types                   (RoseTree(..), enumerateTree)
+
+import Network.Wai.Handler.Warp           (Port)
 import Data.Aeson
 import Data.ByteString.Lazy.Char8         as B (readFile, ByteString)
 import Data.Text                          as T (Text, pack, append)
+
 import Types
+
+baseDir :: FilePath
+baseDir = "/Users/work/code/ConeServer"
+
+srvPort :: Port
+srvPort = 8080
 
 twitterSearchURL :: Text
 twitterSearchURL = "https://twitter.com/hashtag/"
+
+domainLabel :: Text
+domainLabel = "Trending Hashtags"
 
 getTrendingJSON :: IO ByteString
 getTrendingJSON = B.readFile "trending.json"
@@ -55,16 +68,27 @@ extractTrending json = let
   tags = thTagList th
   in map getConeEntryFromHashtag tags
 
-foldTwitCone :: ConeTree
-foldTwitCone = let
-  insertEntry (RoseLeaf a b xs) cEntry = RoseLeaf a b cEntry:xs
-  in foldr insertEntry emptyTree
+node :: ConeEntry -> [ConeTree] -> ConeTree
+node e [] = RoseLeaf e {ceIsLeaf = ceIsLeaf e && True, ceTextId = "tId_" `append` ceLabel e} (-1) []
+node e cs = RoseLeaf e {ceIsLeaf = False, ceTextId = "tId_" `append` ceLabel e} (-1) cs
+
+buildTwitCone :: [ConeEntry] -> [ConeEntry] -> ConeTree
+buildTwitCone rs ts =
+  RoseLeaf emptyLeaf {ceIsLeaf = False, ceTextId = "tId_root", ceLabel = domainLabel} (-1) $
+    map (\e -> node e (map (\e -> node e []) rs)) ts
 
 main = do
-  putStr "\nRelated Tags\n"
-  statsJSON <- getHashtagStatsJSON
-  print $ extractRelated statsJSON
+  putStrLn "Constructing TwitCone"
 
-  putStr "\nTrending Tags\n"
+  -- Read related hashtag samples from file
+  statsJSON <- getHashtagStatsJSON
+  let related = extractRelated statsJSON
+
+  -- Build [ConeEntry] from JSON file of trending hashtags
   trendingJSON <- getTrendingJSON
-  print $ extractTrending trendingJSON
+  let myTree = buildTwitCone related $ extractTrending trendingJSON
+
+  -- Start server
+  ioData <- initServer srvPort baseDir False
+  putStrLn $ "starting on localhost:" ++ show srvPort
+  runServer ioData Nothing Nothing (enumerateTree coneEntrySetId 1 myTree)
