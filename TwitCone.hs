@@ -75,7 +75,7 @@ node e cs = RoseLeaf e {ceIsLeaf = False, ceTextId = "tId_" `append` ceLabel e} 
 buildTwitCone :: [ConeEntry] -> [ConeEntry] -> ConeTree
 buildTwitCone rs ts =
   RoseLeaf emptyLeaf {ceIsLeaf = False, ceTextId = "tId_root", ceLabel = domainLabel} (-1) $
-    map (\e -> node e (map (\e -> node e []) rs)) ts
+    map (flip node (map (flip node []) rs)) ts
 
 main = do
   putStrLn "Constructing TwitCone"
