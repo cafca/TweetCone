@@ -18,7 +18,7 @@ srvPort :: Port
 srvPort = 8080
 
 twitterSearchURL :: Text
-twitterSearchURL = "https://twitter.com/hashtag/"
+twitterSearchURL = "http://twijector.com/go/"
 
 domainLabel :: Text
 domainLabel = "Trending Hashtags"
