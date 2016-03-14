@@ -3,13 +3,18 @@
 import ConeServer.RunServer
 import ConeServer.ConeTypes
 import ConeServer.Types                   (RoseTree(..), enumerateTree)
+import ConeServer.Utils
 
+import Network.OAuth.OAuth2.Internal      (AccessToken)
 import Network.Wai.Handler.Warp           (Port)
 import Data.Aeson
 import Data.ByteString.Lazy.Char8         as B (readFile, ByteString)
 import Data.Text                          as T (Text, pack, append)
 
+import Control.Concurrent                 (threadDelay, forkIO)
+
 import Types
+import TwitterConnector
 
 baseDir :: FilePath
 baseDir = "/Users/work/code/ConeServer"
@@ -18,19 +23,16 @@ srvPort :: Port
 srvPort = 8080
 
 twitterSearchURL :: Text
-twitterSearchURL = "http://twijector.com/go/"
+twitterSearchURL = "https://ritetag.com/hashtag-stats/"
 
 domainLabel :: Text
 domainLabel = "Trending Hashtags"
 
-getTrendingJSON :: IO ByteString
-getTrendingJSON = B.readFile "trending.json"
+getJSON :: String -> IO ByteString
+getJSON fname = B.readFile $ fname ++ ".json"
 
 parseTrendingHashtags :: ByteString -> Maybe TrendingHashtags
 parseTrendingHashtags = decode
-
-getHashtagStatsJSON :: IO ByteString
-getHashtagStatsJSON = B.readFile "hashtag_stats.json"
 
 parseHashtagStats :: ByteString -> Maybe HashtagStats
 parseHashtagStats = decode
@@ -60,13 +62,13 @@ extractRelated :: ByteString -> [ConeEntry]
 extractRelated json = let
   hs = parseHashtagStats json
   tags = hsTagList hs
-  in map getConeEntryFromHashtag tags
+  in fmap getConeEntryFromHashtag tags
 
 extractTrending :: ByteString -> [ConeEntry]
 extractTrending json = let
   th = parseTrendingHashtags json
   tags = thTagList th
-  in map getConeEntryFromHashtag tags
+  in fmap getConeEntryFromHashtag tags
 
 node :: ConeEntry -> [ConeTree] -> ConeTree
 node e [] = RoseLeaf e {ceIsLeaf = ceIsLeaf e && True, ceTextId = "tId_" `append` ceLabel e} (-1) []
@@ -75,20 +77,36 @@ node e cs = RoseLeaf e {ceIsLeaf = False, ceTextId = "tId_" `append` ceLabel e} 
 buildTwitCone :: [ConeEntry] -> [ConeEntry] -> ConeTree
 buildTwitCone rs ts =
   RoseLeaf emptyLeaf {ceIsLeaf = False, ceTextId = "tId_root", ceLabel = domainLabel} (-1) $
-    map (flip node (map (flip node []) rs)) ts
+    fmap (flip node (fmap (flip node []) rs)) ts
+
+-- refreshModel :: IO AccessToken ->
 
 main = do
   putStrLn "Constructing TwitCone"
 
   -- Read related hashtag samples from file
-  statsJSON <- getHashtagStatsJSON
-  let related = extractRelated statsJSON
+  statsJSON <- getJSON "hashtag_stats"
+  trendingJSON <- getJSON "trending"
 
-  -- Build [ConeEntry] from JSON file of trending hashtags
-  trendingJSON <- getTrendingJSON
-  let myTree = buildTwitCone related $ extractTrending trendingJSON
+  let myTree = buildTwitCone (extractRelated statsJSON) (extractTrending trendingJSON)
+
+  bearerToken <- requestToken
 
   -- Start server
-  ioData <- initServer srvPort baseDir False
+  ioData <- initServer srvPort baseDir False bearerToken
+  forkIO $ aktualisator ioData
+
   putStrLn $ "starting on localhost:" ++ show srvPort
   runServer ioData Nothing Nothing (enumerateTree coneEntrySetId 1 myTree)
+
+
+aktualisator :: IOData AccessToken -> IO ()
+aktualisator ioData = getCustom ioData >>= go
+  where
+    go bearerToken = do
+      threadDelay $ 30 * 1000 * 1000
+      putStrLn "Refreshing Twitter data..."
+      -- mach Washington
+      let model' = emptyTree
+      applyIOSetter ioData model' setTestModel
+      go bearerToken
