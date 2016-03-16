@@ -16,6 +16,8 @@ import Control.Concurrent                 (threadDelay, forkIO)
 import Types
 import TwitterConnector
 
+import Web.Twitter.Types                      (SearchResult(..))
+
 baseDir :: FilePath
 baseDir = "/Users/work/code/ConeServer"
 
@@ -99,14 +101,14 @@ main = do
   putStrLn $ "starting on localhost:" ++ show srvPort
   runServer ioData Nothing Nothing (enumerateTree coneEntrySetId 1 myTree)
 
-
 aktualisator :: IOData AccessToken -> IO ()
 aktualisator ioData = getCustom ioData >>= go
   where
     go bearerToken = do
-      threadDelay $ 30 * 1000 * 1000
+      threadDelay $ 10 * 1000 * 1000
       putStrLn "Refreshing Twitter data..."
       -- mach Washington
+      rt <- retrieveTrending bearerToken :: IO (Maybe (SearchResult String))
       let model' = emptyTree
       applyIOSetter ioData model' setTestModel
       go bearerToken
