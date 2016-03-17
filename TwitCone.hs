@@ -7,16 +7,16 @@ import ConeServer.Utils
 
 import Network.OAuth.OAuth2.Internal      (AccessToken)
 import Network.Wai.Handler.Warp           (Port)
+
 import Data.Aeson
-import Data.ByteString.Lazy.Char8         as B (readFile, ByteString, pack)
+import Data.ByteString.Lazy.Char8         as B (readFile, ByteString, pack, unpack)
 import Data.Text                          as T (Text, pack, append)
+import Data.Aeson.Encode.Pretty           (encodePretty)
 
 import Control.Concurrent                 (threadDelay, forkIO)
 
-import Types
+import Types                              as Ts
 import TwitterConnector
-
-import Web.Twitter.Types                      (SearchResult(..))
 
 baseDir :: FilePath
 baseDir = "/Users/work/code/ConeServer"
@@ -30,33 +30,30 @@ twitterSearchURL = "https://ritetag.com/hashtag-stats/"
 domainLabel :: Text
 domainLabel = "Trending search queries"
 
-getJSON :: String -> IO ByteString
-getJSON fname = B.readFile $ fname ++ ".json"
+readJSON :: String -> IO (Maybe [Ts.Trending])
+readJSON fname = do
+  f <- B.readFile $ fname ++ ".json"
+  return $ decode f
 
-parseResult :: ByteString -> Maybe Trending
-parseResult = decode
-
-getConeEntryFromQuery :: SearchQuery -> ConeEntry
+getConeEntryFromQuery :: Ts.SearchQuery -> ConeEntry
 getConeEntryFromQuery sq = ConeEntry {
   ceEntryId       = 0,
-  ceLabel         = sqName sq,
-  ceTargetUri     = Just $ sqURI sq,
+  ceLabel         = Ts.name sq,
+  ceTargetUri     = Just $ Ts.url sq,
   ceComment       = Nothing,
   ceIconName      = Nothing,
   ceStlName       = Nothing,
   ceColor         = Nothing,
   ceIsLeaf        = True,
-  ceTextId        = sqName sq
+  ceTextId        = Ts.name sq
 }
 
-trQueries :: Maybe Trending -> [SearchQuery]
-trQueries Nothing = []
-trQueries (Just tr) = trTrends tr
+getQs :: Maybe [Trending] -> [SearchQuery]
+getQs Nothing = []
+getQs (Just (t:_)) = Ts.trends t
 
-extractTrending :: ByteString -> [ConeEntry]
-extractTrending json = let
-    tags = trQueries $ parseResult json
-  in fmap getConeEntryFromQuery tags
+entriesFromTrending :: Maybe [Trending] -> [ConeEntry]
+entriesFromTrending mts = fmap getConeEntryFromQuery $ getQs mts
 
 node :: ConeEntry -> [ConeTree] -> ConeTree
 node e [] = RoseLeaf e {ceIsLeaf = ceIsLeaf e && True, ceTextId = "tId_" `append` ceLabel e} (-1) []
@@ -67,14 +64,15 @@ buildTwitCone ts =
   RoseLeaf emptyLeaf {ceIsLeaf = False, ceTextId = "tId_root", ceLabel = domainLabel} (-1) $
     fmap (flip node []) ts
 
+prepTree :: ConeTree -> ConeTree
+prepTree c = enumerateTree coneEntrySetId 1 c
+
 -- refreshModel :: IO AccessToken ->
 
 main = do
   putStrLn "Constructing TwitCone"
-
-  -- Read related hashtag samples from file
-  trendingJSON <- getJSON "trending"
-  let myTree = buildTwitCone $ extractTrending trendingJSON
+  j <- readJSON "trending"
+  let myTree = buildTwitCone $ entriesFromTrending j
 
   -- Prepare server and fork updateJob
   bearerToken <- requestToken
@@ -83,7 +81,7 @@ main = do
 
     -- Start server
   putStrLn $ "starting on localhost:" ++ show srvPort
-  runServer ioData Nothing Nothing (enumerateTree coneEntrySetId 1 myTree)
+  runServer ioData Nothing Nothing (prepTree myTree)
 
 updater :: IOData AccessToken -> IO ()
 updater ioData = getCustom ioData >>= go
@@ -92,14 +90,12 @@ updater ioData = getCustom ioData >>= go
       threadDelay $ 10 * 1000 * 1000
 
       putStrLn "Refreshing Twitter data..."
-      rt <- retrieveTrending bearerToken :: IO (Maybe String)
-      let res = case rt of
-                  Nothing -> "[]"
-                  (Just a) -> drop 1 . reverse . drop 1 $ reverse a
-      writeFile "trending.json" res
-
-      let model' = enumerateTree coneEntrySetId 1 (buildTwitCone . extractTrending $ B.pack res)
-
-      applyIOSetter ioData model' setTestModel
+      mts <- retrieveTrending bearerToken
+      case mts of
+        Nothing   -> putStrLn "Error receiving new trending topics"
+        (Just ts) -> do
+          let model' = prepTree . buildTwitCone $ entriesFromTrending mts
+          applyIOSetter ioData model' setTestModel
+          writeFile "/Users/work/code/TwitCone/trending_.json" (B.unpack $ encodePretty ts)
 
       go bearerToken

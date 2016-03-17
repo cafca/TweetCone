@@ -11,6 +11,8 @@ import qualified Data.ByteString.Char8        as B (pack)
 import Data.Aeson.Types                       (FromJSON)
 import Web.Twitter.Types                      (SearchResult(..), SearchMetadata(..))
 
+import Types
+
 
 twitterKey :: IO OAuth2
 twitterKey = do
@@ -46,7 +48,7 @@ requestToken = do
   where
     body = [("grant_type", "client_credentials")]
 
-retrieveTrending :: (FromJSON a) => AccessToken -> IO (Maybe a)
+retrieveTrending :: AccessToken -> IO (Maybe [Trending])
 retrieveTrending bearerToken = do
   mgr <- newManager tlsManagerSettings
   eResp <- authGetJSON mgr bearerToken (placeTrendsURL berlinID)
