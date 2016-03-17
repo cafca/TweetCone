@@ -5,7 +5,7 @@ module TwitterConnector where
 import Network.OAuth.OAuth2
 import Network.HTTP.Conduit
 import System.Posix.Env                       (getEnv)
-import qualified Data.ByteString.Lazy.Char8   as BL (putStrLn)
+import qualified Data.ByteString.Lazy.Char8   as BL (putStrLn, ByteString(..))
 import qualified Data.ByteString.Char8        as B (pack)
 
 import Data.Aeson.Types                       (FromJSON)
@@ -26,7 +26,8 @@ twitterKey = do
               , oauthAccessTokenEndpoint  = ""
               }
 
---  Yahoo! Where On Earth ID of Germany
+-- Yahoo! Where On Earth ID of Germany
+-- Find available IDs in available_countries.json (as of March 2016)
 berlinID :: String
 berlinID = "23424829"
 
@@ -45,7 +46,7 @@ requestToken = do
   where
     body = [("grant_type", "client_credentials")]
 
-retrieveTrending :: (FromJSON body) => AccessToken -> IO (Maybe (SearchResult body))
+retrieveTrending :: (FromJSON a) => AccessToken -> IO (Maybe a)
 retrieveTrending bearerToken = do
   mgr <- newManager tlsManagerSettings
   eResp <- authGetJSON mgr bearerToken (placeTrendsURL berlinID)
