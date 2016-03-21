@@ -16,17 +16,17 @@ import Types
 
 twitterKey :: IO OAuth2
 twitterKey = do
-  env <- getEnv "TWITTER_CLIENT_SECRET"
-  let cs = case env of
-              Nothing -> error "TWITTER_CLIENT_SECRET not found in environment"
-              Just a -> a
-  return OAuth2
-              { oauthClientId             = "NryOz1RKzhOaBz2QwBd6zuxMK"
-              , oauthClientSecret         = B.pack cs
-              , oauthOAuthorizeEndpoint   = "https://api.twitter.com/oauth2/token"
-              , oauthCallback             = Nothing
-              , oauthAccessTokenEndpoint  = ""
-              }
+    env <- getEnv "TWITTER_CLIENT_SECRET"
+    let cs = case env of
+                Nothing -> error "TWITTER_CLIENT_SECRET not found in environment"
+                Just a -> a
+    return OAuth2
+        { oauthClientId             = "NryOz1RKzhOaBz2QwBd6zuxMK"
+        , oauthClientSecret         = B.pack cs
+        , oauthOAuthorizeEndpoint   = "https://api.twitter.com/oauth2/token"
+        , oauthCallback             = Nothing
+        , oauthAccessTokenEndpoint  = ""
+        }
 
 -- Yahoo! Where On Earth ID of Germany
 -- Find available IDs in available_countries.json (as of March 2016)
@@ -41,18 +41,18 @@ invalidToken = AccessToken "" Nothing Nothing Nothing
 
 requestToken :: IO AccessToken
 requestToken = do
-  mgr <- newManager tlsManagerSettings
-  tk <- twitterKey
-  eResp <- doJSONPostRequest mgr tk (oauthOAuthorizeEndpoint tk) body
-  either (\err -> BL.putStrLn err >> return invalidToken) return eResp
-  where
-    body = [("grant_type", "client_credentials")]
+    mgr <- newManager tlsManagerSettings
+    tk <- twitterKey
+    eResp <- doJSONPostRequest mgr tk (oauthOAuthorizeEndpoint tk) body
+    either (\err -> BL.putStrLn err >> return invalidToken) return eResp
+    where
+        body = [("grant_type", "client_credentials")]
 
 retrieveTrending :: AccessToken -> IO (Maybe [Trending])
 retrieveTrending bearerToken = do
-  mgr <- newManager tlsManagerSettings
-  eResp <- authGetJSON mgr bearerToken (placeTrendsURL berlinID)
-  either
-    (\err -> BL.putStrLn err >> return Nothing)
-    (\resp -> return (Just resp))
-    eResp
+    mgr <- newManager tlsManagerSettings
+    eResp <- authGetJSON mgr bearerToken (placeTrendsURL berlinID)
+    either
+        (\err -> BL.putStrLn err >> return Nothing)
+        (\resp -> return (Just resp))
+        eResp
