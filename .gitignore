@@ -18,3 +18,5 @@ cabal.sandbox.config
 
 TwitCone
 .DS_Store
+
+trending.json

@@ -14,6 +14,7 @@ import Data.Text                          as T (Text, pack, append)
 import Data.Aeson.Encode.Pretty           (encodePretty)
 import Data.Time.Clock
 import Data.Time.Format
+import System.IO                          (hGetContents, hClose, openFile, IOMode(..))
 
 import Control.Concurrent                 (threadDelay, forkIO)
 
@@ -34,8 +35,10 @@ domainLabel = "Trending search queries"
 
 readJSON :: String -> IO (Maybe [Ts.Trending])
 readJSON fname = do
-    f <- B.readFile $ fname ++ ".json"
-    return $ decode f
+    h <- openFile (fname ++ ".json") ReadMode
+    c <- hGetContents h
+    hClose h
+    return . decode $ B.pack c
 
 getConeEntryFromQuery :: Ts.SearchQuery -> ConeEntry
 getConeEntryFromQuery sq = ConeEntry {
@@ -97,7 +100,7 @@ updater ioData = getCustom ioData >>= go
                 (Just ts) -> do
                     let model' = prepTree . buildTwitCone $ entriesFromTrending mts
                     applyIOSetter ioData model' setTestModel
-                    writeFile "/Users/work/code/TwitCone/trending_.json" (B.unpack $ encodePretty ts)
+                    writeFile "/Users/work/code/TwitCone/trending.json" (B.unpack $ encodePretty ts)
                     t <- getCurrentTime
                     putStrLn $ "Twitter data refreshed at " ++ (formatTime defaultTimeLocale "%c" t)
 
