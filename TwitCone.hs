@@ -14,9 +14,10 @@ import Data.Text                          as T (Text, pack, append)
 import Data.Aeson.Encode.Pretty           (encodePretty)
 import Data.Time.Clock
 import Data.Time.Format
-import System.IO                          (hGetContents, hClose, openFile, IOMode(..))
+import qualified System.IO.Strict         as S
 
 import Control.Concurrent                 (threadDelay, forkIO)
+import Control.DeepSeq
 
 import Types                              as Ts
 import TwitterConnector
@@ -35,9 +36,7 @@ domainLabel = "Trending search queries"
 
 readJSON :: String -> IO (Maybe [Ts.Trending])
 readJSON fname = do
-    h <- openFile (fname ++ ".json") ReadMode
-    c <- hGetContents h
-    hClose h
+    c <- S.readFile (fname ++ ".json")
     return . decode $ B.pack c
 
 getConeEntryFromQuery :: Ts.SearchQuery -> ConeEntry
@@ -53,21 +52,36 @@ getConeEntryFromQuery sq = ConeEntry {
     ceTextId        = Ts.name sq
 }
 
-getQs :: Maybe [Trending] -> [SearchQuery]
-getQs Nothing = []
-getQs (Just (t:_)) = Ts.trends t
+getConeEntryFromString :: Text -> ConeEntry
+getConeEntryFromString s = ConeEntry {
+    ceEntryId       = 0,
+    ceLabel         = s,
+    ceTargetUri     = Nothing,
+    ceComment       = Nothing,
+    ceIconName      = Nothing,
+    ceStlName       = Nothing,
+    ceColor         = Nothing,
+    ceIsLeaf        = True,
+    ceTextId        = s
+}
 
-entriesFromTrending :: Maybe [Trending] -> [ConeEntry]
-entriesFromTrending mts = fmap getConeEntryFromQuery $ getQs mts
+trendingQuery :: Maybe [Trending] -> [(Text, [SearchQuery])]
+trendingQuery Nothing = []
+trendingQuery (Just ts) = fmap (\t -> (Ts.as_of t, Ts.trends t)) ts
 
-node :: ConeEntry -> [ConeTree] -> ConeTree
-node e [] = RoseLeaf e {ceIsLeaf = ceIsLeaf e && True, ceTextId = "tId_" `append` ceLabel e} (-1) []
-node e cs = RoseLeaf e {ceIsLeaf = False, ceTextId = "tId_" `append` ceLabel e} (-1) cs
+entriesFromTrending :: Maybe [Trending] -> [(ConeEntry, [ConeEntry])]
+entriesFromTrending mts = fmap (\(s, qs) -> ((getConeEntryFromString s), (fmap getConeEntryFromQuery qs))) $ trendingQuery mts
 
-buildTwitCone :: [ConeEntry] -> ConeTree
+node :: [ConeTree] -> ConeEntry -> ConeTree
+node [] e = RoseLeaf e {ceIsLeaf = ceIsLeaf e && True, ceTextId = "tId_" `append` ceLabel e} (-1) []
+node cs e = RoseLeaf e {ceIsLeaf = False, ceTextId = "tId_" `append` ceLabel e} (-1) cs
+
+leaf = node []
+
+buildTwitCone :: [(ConeEntry, [ConeEntry])] -> ConeTree
 buildTwitCone ts =
     RoseLeaf emptyLeaf {ceIsLeaf = False, ceTextId = "tId_root", ceLabel = domainLabel} (-1) $
-        fmap (flip node []) ts
+        fmap (\(a, b) -> (node (fmap leaf b) a)) ts
 
 prepTree :: ConeTree -> ConeTree
 prepTree c = enumerateTree coneEntrySetId 1 c
