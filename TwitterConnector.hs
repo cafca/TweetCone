@@ -3,15 +3,32 @@
 module TwitterConnector where
 
 import Network.OAuth.OAuth2
+import Network.OAuth.OAuth2.Internal            (AccessToken)
 import Network.HTTP.Conduit
-import System.Posix.Env                       (getEnv)
-import qualified Data.ByteString.Lazy.Char8   as BL (putStrLn, ByteString(..))
-import qualified Data.ByteString.Char8        as B (pack)
+import System.Posix.Env                         (getEnv)
+import qualified Data.ByteString.Lazy.Char8     as BL (putStrLn, ByteString(..))
+import qualified Data.ByteString.Char8          as B (pack)
 
-import Data.Aeson.Types                       (FromJSON)
-import Web.Twitter.Types                      (SearchResult(..), SearchMetadata(..))
+import Data.Aeson.Types                         (FromJSON)
+import qualified Data.Text                      as T (pack, unpack, append)
+import qualified Data.Text.IO                   as TIO (putStrLn)
+import Web.Twitter.Types                        (SearchResult(..), SearchMetadata(..), SearchStatus(..))
 
 import Types
+import Web.Twitter.Types                        (SearchStatus(..), searchResultStatuses, User(..))
+
+
+
+
+-- How many trending topics to store
+trendingCount :: Int
+trendingCount = 10
+
+-- How many statuses to store per trending item
+statusCount :: Int
+statusCount = 10
+
+
 
 
 twitterKey :: IO OAuth2
@@ -36,6 +53,9 @@ berlinID = "23424829"
 placeTrendsURL :: String -> URI
 placeTrendsURL placeName = B.pack $ "https://api.twitter.com/1.1/trends/place.json?id=" ++ placeName
 
+searchURL :: String -> URI
+searchURL q = B.pack $ "https://api.twitter.com/1.1/search/tweets.json?q=" ++ q
+
 invalidToken :: AccessToken
 invalidToken = AccessToken "" Nothing Nothing Nothing
 
@@ -48,6 +68,8 @@ requestToken = do
     where
         body = [("grant_type", "client_credentials")]
 
+
+
 retrieveTrending :: AccessToken -> IO (Maybe [Trending])
 retrieveTrending bearerToken = do
     mgr <- newManager tlsManagerSettings
@@ -56,3 +78,29 @@ retrieveTrending bearerToken = do
         (\err -> BL.putStrLn err >> return Nothing)
         (\resp -> return (Just resp))
         eResp
+
+retrieveTweets :: AccessToken -> String -> IO (Maybe (SearchResult [SearchStatus]))
+retrieveTweets bearerToken q = do
+    mgr <- newManager tlsManagerSettings
+    eResp <- authGetJSON mgr bearerToken (searchURL q)
+    either
+        (\err -> BL.putStrLn err >> return Nothing)
+        (\resp -> return (Just resp))
+        eResp
+
+
+
+-- add status posts to trending data
+addStatuses :: AccessToken -> Trending -> IO Trending
+addStatuses at t = do
+    trends' <- mapM (addTweets at) (take statusCount $ trends t)
+    return t {trends = trends'}
+
+-- call twitter api for status posts
+addTweets :: AccessToken -> SearchQuery -> IO SearchQuery
+addTweets at sq = do
+    mtws <- retrieveTweets at (T.unpack (query sq))
+    case mtws of
+        Nothing -> putStrLn "No result trying to add tweets" >> return sq
+        Just tws -> TIO.putStrLn (T.pack "Loaded tweets for " `T.append` (query sq))
+            >> return sq {tweets = Just $ take trendingCount (searchResultStatuses tws)}
