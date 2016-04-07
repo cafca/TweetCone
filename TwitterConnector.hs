@@ -28,6 +28,11 @@ trendingCount = 10
 statusCount :: Int
 statusCount = 10
 
+-- Yahoo! Where On Earth ID of Germany
+-- Find available IDs in available_countries.json (as of March 2016)
+berlinID :: String
+berlinID = "23424829"
+
 
 
 
@@ -44,11 +49,6 @@ twitterKey = do
         , oauthCallback             = Nothing
         , oauthAccessTokenEndpoint  = ""
         }
-
--- Yahoo! Where On Earth ID of Germany
--- Find available IDs in available_countries.json (as of March 2016)
-berlinID :: String
-berlinID = "23424829"
 
 placeTrendsURL :: String -> URI
 placeTrendsURL placeName = B.pack $ "https://api.twitter.com/1.1/trends/place.json?id=" ++ placeName
@@ -89,14 +89,13 @@ retrieveTweets bearerToken q = do
         eResp
 
 
-
--- add status posts to trending data
+-- add status posts to trending data by calling twitter api
 addStatuses :: AccessToken -> Trending -> IO Trending
 addStatuses at t = do
     trends' <- mapM (addTweets at) (take statusCount $ trends t)
     return t {trends = trends'}
 
--- call twitter api for status posts
+-- actual twitter api call for addStatuses
 addTweets :: AccessToken -> SearchQuery -> IO SearchQuery
 addTweets at sq = do
     mtws <- retrieveTweets at (T.unpack (query sq))
