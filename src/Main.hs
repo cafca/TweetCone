@@ -34,7 +34,7 @@ tcBaseDir = "/Users/work/code/TweetCone/"
 
 -- file name of data file
 dataFileName :: String
-dataFileName = "twitter_data.json"
+dataFileName = "data/twitter_data.json"
 
 -- cone server port
 srvPort :: Port
