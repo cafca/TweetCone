@@ -20,33 +20,10 @@ import qualified System.IO.Strict               as S
 import Control.Concurrent                       (threadDelay, forkIO)
 import Control.DeepSeq
 
+import Config
 import Types                                    as Ts
 import Web.Twitter.Types                        (SearchStatus(..), searchResultStatuses, User(..))
 import TwitterConnector
-
--- base directory for cone server
-baseDir :: FilePath
-baseDir = "/Users/work/code/ConeServer"
-
--- base directory for TweetCone
-tcBaseDir :: FilePath
-tcBaseDir = "/Users/work/code/TweetCone/"
-
--- file name of data file
-dataFileName :: String
-dataFileName = "data/twitter_data.json"
-
--- cone server port
-srvPort :: Port
-srvPort = 8080
-
--- How often is new data added (in seconds)
-updateInterval :: Int
-updateInterval = 1 * 60
-
--- show this in upper left hand corner of conecanvas
-domainLabel :: Text
-domainLabel = "Trending search queries"
 
 
 -- decode trending terms from json serialization

@@ -15,25 +15,8 @@ import qualified Data.Text.IO                   as TIO (putStrLn)
 import Web.Twitter.Types                        (SearchResult(..), SearchMetadata(..), SearchStatus(..))
 
 import Types
+import Config
 import Web.Twitter.Types                        (SearchStatus(..), searchResultStatuses, User(..))
-
-
-
-
--- How many trending topics to store
-trendingCount :: Int
-trendingCount = 10
-
--- How many statuses to store per trending item
-statusCount :: Int
-statusCount = 10
-
--- Yahoo! Where On Earth ID of Germany
--- Find available IDs in available_countries.json (as of March 2016)
-berlinID :: String
-berlinID = "23424829"
-
-
 
 
 twitterKey :: IO OAuth2
@@ -73,7 +56,7 @@ requestToken = do
 retrieveTrending :: AccessToken -> IO (Maybe [Trending])
 retrieveTrending bearerToken = do
     mgr <- newManager tlsManagerSettings
-    eResp <- authGetJSON mgr bearerToken (placeTrendsURL berlinID)
+    eResp <- authGetJSON mgr bearerToken (placeTrendsURL locationID)
     either
         (\err -> BL.putStrLn err >> return Nothing)
         (\resp -> return (Just resp))
