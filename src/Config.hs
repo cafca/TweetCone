@@ -1,4 +1,11 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Config where
+
+
+import Network.Wai.Handler.Warp                 (Port)
+import Data.Text                                (Text)
+
 
 -- base directory for cone server
 baseDir :: FilePath
